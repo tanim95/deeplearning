@@ -4,21 +4,40 @@ import pandas as pd
 import matplotlib as plt
 import seaborn as sns
 
+# Layer 1 [3 neurons]
+# INPUTS
+X = [[5.6, 7.8, 9.5, 10.8],
+     [-2.5, 3.2, 4.9, 9],
+     [10.5, -12.8, 0.98, -5.26]]
 
-input = [5.6, 7.8, 9.5, 10.8]
-weights1 = [-1.001, 0.88, -0.598, 0.784]
-weights2 = [0.99, 0.65, 0.598, -0.84]
-weights3 = [0.68, -0.88, 0.33, 1.2]
-bias1 = 1.22
-bias2 = 2
-bias3 = 2.3
+# weights = [[-1.001, 0.88, -0.598, 0.784],
+#            [0.99, 0.65, 0.598, -0.84],
+#            [0.68, -0.88, 0.33, 1.2]]
 
-# for last fully connected layer which has three output neuron and takes input from 4 hidden neuron
+# bias = [1.22, 2, 2.3]
+
+# layer1 = np.dot(X, np.array(weights).T) + bias
+# print(layer1)
+
+# # Secound layer[3 neurons]
+# inputs2 = layer1
+
+# weights2 = [[0.3, -0.88, -0.8],
+#             [1.29, -1.65, 0.98],
+#             [0.88, -0.88, -0.73]]
+
+# bias2 = [3, 2.1, 0.9]
+
+# layer2 = np.dot(inputs2, np.array(weights2).T) + bias2
+# print(layer2)
+
+np.random.seed(100)
+print(np.random.randn(4, 3))
 
 
-output = [input[0]*weights1[0]+input[1]*weights1[1] + input[2]*weights1[2]+input[3]*weights1[3] + bias1,
-          input[0]*weights2[0]+input[1]*weights2[1] +
-          input[2]*weights2[2]+input[3]*weights2[3] + bias2,
-          input[0]*weights3[0]+input[1]*weights3[1] + input[2]*weights3[2]+input[3]*weights3[3] + bias3]
-value = [round(num, 4) for num in output]
-print(value)
+class Dense_Layer:
+    def __init__(self, input, neurons):
+        self.weights = np.random.randn(input, neurons)
+
+    def forward(self):
+        pass
