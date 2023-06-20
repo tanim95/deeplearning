@@ -60,7 +60,7 @@ X, y = spiral_data(100, 3)
 class Dense_Layer:
     def __init__(self, n_input, neurons, weights):
         self.weights = weights * np.random.randn(n_input, neurons)
-        self.bias = np.zeros((1, neurons))
+        self.bias = np.array([0.23, -0.25, 0.45, 0.93, -0.73])
 
     def forward(self, input):
         self.output = np.dot(input, self.weights) + self.bias
@@ -75,9 +75,9 @@ class Activation_ReLU:
 
 
 layer_1 = Dense_Layer(2, 5, 0.9)
-layer_2 = Dense_Layer(5, 3, 1.2)
+# layer_2 = Dense_Layer(5, 3, 1.2)
 output_1 = layer_1.forward(X)
-output_2 = layer_2.forward(output_1)
+# output_2 = layer_2.forward(output_1)
 activation_relu = Activation_ReLU()
-activation_relu.forward(layer_1.output)
+activation_relu.forward(output_1)
 print(activation_relu.output)

@@ -1,1 +1,1 @@
-print(activation_relu.forward(output_1))
+print(activation_relu.output)
