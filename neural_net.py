@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as plt
 import seaborn as sns
+import math
 
 # Layer 1 [3 neurons]
 # INPUTS
@@ -36,7 +37,7 @@ np.random.seed(42)
 #      [-2.5, 3.2, 4.9, 9.01],
 #      [10.5, -12.8, 0.98, -5.26]]
 
-# Data Generator
+# Data Generator[this function gives a spiral dataset]
 
 # https://cs231n.github.io/neural-networks-case-study/
 
@@ -66,7 +67,7 @@ class Dense_Layer:
         self.output = np.dot(input, self.weights) + self.bias
         return self.output
 
-# Activation function
+# Activation function-1
 
 
 class Activation_ReLU:
@@ -75,9 +76,30 @@ class Activation_ReLU:
 
 
 layer_1 = Dense_Layer(2, 5, 0.9)
-# layer_2 = Dense_Layer(5, 3, 1.2)
 output_1 = layer_1.forward(X)
-# output_2 = layer_2.forward(output_1)
 activation_relu = Activation_ReLU()
 activation_relu.forward(output_1)
-print(activation_relu.output)
+# print(activation_relu.output)
+
+# Activation function-2
+# SoftMax[e^x + Normalisation] [its for output layer.because relu will ignore any '-ve' value but we need that
+#  value in our final layer to evalute model performence and properly correct the bias  ]
+
+E = math.e  # 2.718281828459045
+exp_val = []
+for i in output_1:
+    exp_val.append(E**i)
+
+# anothe way
+# exp_val = np.exp(output_1)
+
+# Probability distributation(normalising values)
+norm_values = exp_val / np.sum(exp_val)
+
+
+# print(exp_val)
+print(norm_values)
+
+
+# layer_2 = Dense_Layer(5, 3, 1.2)
+# output_2 = layer_2.forward(output_1)
