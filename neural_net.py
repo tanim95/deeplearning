@@ -55,13 +55,10 @@ def spiral_data(points, classes):
     return X, y
 
 
-X, y = spiral_data(100, 3)
-
-
 class Dense_Layer:
-    def __init__(self, n_input, neurons, weights):
-        self.weights = weights * np.random.randn(n_input, neurons)
-        self.bias = np.array([0.23, -0.25, 0.45, 0.93, -0.73])
+    def __init__(self, n_input, neurons):
+        self.weights = np.random.randn(n_input, neurons)
+        self.bias = np.zeros(neurons)
 
     def forward(self, input):
         self.output = np.dot(input, self.weights) + self.bias
@@ -73,33 +70,41 @@ class Dense_Layer:
 class Activation_ReLU:
     def forward(self, input):
         self.output = np.maximum(0, input)
-
-
-layer_1 = Dense_Layer(2, 5, 0.9)
-output_1 = layer_1.forward(X)
-activation_relu = Activation_ReLU()
-activation_relu.forward(output_1)
-# print(activation_relu.output)
-
 # Activation function-2
 # SoftMax[e^x + Normalisation] [its for output layer.because relu will ignore any '-ve' value but we need that
 #  value in our final layer to evalute model performence and properly correct the bias  ]
 
-E = math.e  # 2.718281828459045
-exp_val = []
-for i in output_1:
-    exp_val.append(E**i)
 
-# anothe way
-# exp_val = np.exp(output_1)
-
-# Probability distributation(normalising values)
-norm_values = exp_val / np.sum(exp_val)
+class Activation_SoftMax:
+    def forward(self, input):
+        # substracting max value so that e^largeNumber won't cause explode of output!
+        exp_val = np.exp(input - np.max(input, axis=1, keepdims=True))
+        probability = exp_val / np.sum(exp_val, axis=1, keepdims=True)
+        self.output = probability
+# Loss Function
 
 
-# print(exp_val)
-print(norm_values)
+class Loss:
+    def calculate(self, output, y):
+        loss = self.forward(output, y)
+        mean_loss = np.mean(loss)
+        return mean_loss
 
 
-# layer_2 = Dense_Layer(5, 3, 1.2)
-# output_2 = layer_2.forward(output_1)
+class CategoricalCorssEntropy(Loss):
+    def forward(self, y_true, y_pred):
+        samples = len(y_pred)
+
+
+X, y = spiral_data(100, 3)
+
+layer_1 = Dense_Layer(2, 3)
+activation_relu = Activation_ReLU()
+layer_2 = Dense_Layer(3, 3)
+activation_smax = Activation_SoftMax()
+output_1 = layer_1.forward(X)
+output_2 = layer_2.forward(output_1)
+
+activation_relu.forward(output_1)
+activation_smax.forward(output_2)
+print(activation_smax.output)
