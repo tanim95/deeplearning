@@ -1,1 +1,1 @@
-print(activation_smax.output)
+5

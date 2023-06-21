@@ -33,10 +33,11 @@ import math
 # print(layer2)
 
 np.random.seed(42)
-# X = [[5.6, 7.8, 9.5, 10.8],
-#      [-2.5, 3.2, 4.9, 9.01],
-#      [10.5, -12.8, 0.98, -5.26]]
+X_demo = np.array([[5.6, 7.8, 9.5, 10.8],
+                  [-2.5, 3.2, 4.9, 9.01],
+                   [10.5, -12.8, 0.98, -5.26]])
 
+# print(list(range(5)))
 # Data Generator[this function gives a spiral dataset]
 
 # https://cs231n.github.io/neural-networks-case-study/
@@ -85,8 +86,8 @@ class Activation_SoftMax:
 
 
 class Loss:
-    def calculate(self, output, y):
-        loss = self.forward(output, y)
+    def calculate(self, y, output):
+        loss = self.forward(y, output)
         mean_loss = np.mean(loss)
         return mean_loss
 
@@ -94,6 +95,13 @@ class Loss:
 class CategoricalCorssEntropy(Loss):
     def forward(self, y_true, y_pred):
         samples = len(y_pred)
+        y_pred_clip = np.clip(y_pred, math.e ** -7, 1 - math.e ** -7)
+        if len(y_true.shape) == 1:  # if the y = [0,1] this shape
+            confidence = y_pred_clip[list(range(samples)), y_true]
+        if len(y_true.shape) == 2:  # if the y = [[1,0],[0,1]],one-hot encoded
+            confidence = np.sum(y_pred_clip * y_true, axis=1)
+        likelihood = -np.log(confidence)
+        return likelihood
 
 
 X, y = spiral_data(100, 3)
@@ -107,4 +115,8 @@ output_2 = layer_2.forward(output_1)
 
 activation_relu.forward(output_1)
 activation_smax.forward(output_2)
-print(activation_smax.output)
+# print(activation_smax.output)
+
+loss_function = CategoricalCorssEntropy()
+loss = loss_function.calculate(y, activation_smax.output)
+print(loss)
