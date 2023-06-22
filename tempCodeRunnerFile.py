@@ -1,1 +1,1 @@
-5
+print(activation_smax.output)

@@ -70,10 +70,20 @@ class Dense_Layer:
 
 class Activation_ReLU:
     def forward(self, input):
+        # remember inputs
+        self.input = input
         self.output = np.maximum(0, input)
+
+    def backward(self, dvalues):
+        # as we need to modify original variable first make a copy
+        self.dinput = dvalues.copy()
+        # zero gradient where input values negative
+        self.dinput[self.input <= 0] = 0
+
+
 # Activation function-2
 # SoftMax[e^x + Normalisation] [its for output layer.because relu will ignore any '-ve' value but we need that
-#  value in our final layer to evalute model performence and properly correct the bias  ]
+#  value in our final layer to evalute model performence and properly correct biases  ]
 
 
 class Activation_SoftMax:
@@ -82,11 +92,23 @@ class Activation_SoftMax:
         exp_val = np.exp(input - np.max(input, axis=1, keepdims=True))
         probability = exp_val / np.sum(exp_val, axis=1, keepdims=True)
         self.output = probability
+
+    def backward(self, dvalues):
+        self.dinput = np.empty_like(dvalues)
+        # ENUMURATING OUTPUT AND GRADIANT
+        for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
+            # FLATTENING OUTPUT ARRAY
+            single_output = single_output.reshape(-1, 1)
+            # CALCULATING JACOBIAN MATRIX OF THE OUTPUT
+            jacobian_matrix = np.diagflat(
+                single_output) - np.dot(single_output, single_output.T)
+            # CALCULATING SAMPLE-WISE GRADIANT AND ADD IT TO THE SMAPEL GRADIENTS
+            self.dinput[index] = np.dot(jacobian_matrix, single_dvalues)
+
+
 # Loss Function
-
-
 class Loss:
-    def calculate(self, y, output):
+    def calculate(self, output, y):
         loss = self.forward(y, output)
         mean_loss = np.mean(loss)
         return mean_loss
@@ -100,23 +122,84 @@ class CategoricalCorssEntropy(Loss):
             confidence = y_pred_clip[list(range(samples)), y_true]
         if len(y_true.shape) == 2:  # if the y = [[1,0],[0,1]],one-hot encoded
             confidence = np.sum(y_pred_clip * y_true, axis=1)
+
+        # LOSSES
         likelihood = -np.log(confidence)
         return likelihood
+
+    def backward(self, dvalues, y_true):
+        samples = len(dvalues)
+        labels = len(dvalues[0])
+        # IF LABELS ARE SPARSE TURN THEM INTO ONE HOT ENCODER
+        if len(y_true.shape) == 1:
+            y_true = np.eye(labels)[y_true]
+        # CALCULATE GRADIENT
+        self.dinput = -y_true / dvalues
+        # NORMALISE GRADIENT
+        self.dinput = self.dinput / samples
+
+
+class Activation_Softmax_Loss_CategoricalCrossEntropy():
+    # CREATING ACTIVATION AND LOSS FUNCTION OBJECTS
+    def __init__(self):
+        self.activation = Activation_SoftMax()
+        self.loss = CategoricalCorssEntropy()
+
+    def forward(self, inputs, y_true):
+        # OUTPUT LAYER ACTIVATION
+        self.activation.forward(inputs)
+        self.output = self.activation.output
+        return self.loss.calculate(self.output, y_true)
+
+    def backward(self, dvalues, y_true):
+        samples = len(dvalues)
+        # IF LABELS ARE ONE-HOT ENCODED TURN THEM INTO DISCRETE VALUES
+        if len(y_true.shape) == 2:
+            y_true = np.argmax(y_true, axis=1)
+        self.diputs = dvalues.copy()
+        # CALCULATE GRADIENT
+        self.diputs[range(samples), y_true] -= 1
+        # NORMALISE GRADIENT
+        self.dinputs = self.dinputs / samples
 
 
 X, y = spiral_data(100, 3)
 
-layer_1 = Dense_Layer(2, 3)
+# ////////////////////////////////////////////////// test 1 //////////////////////////////
+
+# layer_1 = Dense_Layer(2, 3)
+# activation_relu = Activation_ReLU()
+# layer_2 = Dense_Layer(3, 3)
+# activation_smax = Activation_SoftMax()
+# output_1 = layer_1.forward(X)
+# output_2 = layer_2.forward(output_1)
+
+# activation_relu.forward(output_1)
+# activation_smax.forward(output_2)
+# # print(activation_smax.output)
+
+# loss_function = CategoricalCorssEntropy()
+# loss = loss_function.calculate(y, activation_smax.output)
+# # print(loss)
+
+# # calculating Accuracy
+# prediction = np.argmax(activation_smax.output, axis=1)
+# accuracy = np.mean(prediction == y)
+# # print(accuracy)
+
+# ////////////////////////////////////////////////// test 2 /////////////////////////////
+
+
+layer_1 = Dense_Layer(2, 3)  # Input Layer
 activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(3, 3)
-activation_smax = Activation_SoftMax()
-output_1 = layer_1.forward(X)
-output_2 = layer_2.forward(output_1)
-
-activation_relu.forward(output_1)
-activation_smax.forward(output_2)
-# print(activation_smax.output)
-
-loss_function = CategoricalCorssEntropy()
-loss = loss_function.calculate(y, activation_smax.output)
+# PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
+layer_1.forward(X[:25])
+# # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
+activation_relu.forward(layer_1.output)
+# # PERFORMING FORWARD PASS THORUGH SECOUND LAYER
+layer_2.forward(activation_relu.output)  # First 15 input
+# # CREATING SOFTMAX CALSSIFIER COMBINED WITH LOSS AND ACTIVATION
+loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
+loss = loss_activation.forward(layer_2.output, y[:25])
 print(loss)
