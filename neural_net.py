@@ -62,8 +62,16 @@ class Dense_Layer:
         self.bias = np.zeros(neurons)
 
     def forward(self, input):
+        self.inputs = input
         self.output = np.dot(input, self.weights) + self.bias
         return self.output
+
+    def backward(self, dvalues):
+        # Gradients on parameters
+        self.dweights = np.dot(self.inputs.T, dvalues)
+        self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+        # Gradient on values
+        self.dinputs = np.dot(dvalues, self.dweights.T)
 
 # Activation function-1
 
@@ -156,9 +164,9 @@ class Activation_Softmax_Loss_CategoricalCrossEntropy():
         # IF LABELS ARE ONE-HOT ENCODED TURN THEM INTO DISCRETE VALUES
         if len(y_true.shape) == 2:
             y_true = np.argmax(y_true, axis=1)
-        self.diputs = dvalues.copy()
-        # CALCULATE GRADIENT
-        self.diputs[range(samples), y_true] -= 1
+        self.dinputs = dvalues.copy()
+        # CALCULATE GRADIENT(penalising the correct class by substracting 1)
+        self.dinputs[range(samples), y_true] -= 1
         # NORMALISE GRADIENT
         self.dinputs = self.dinputs / samples
 
@@ -189,17 +197,34 @@ X, y = spiral_data(100, 3)
 
 # ////////////////////////////////////////////////// test 2 /////////////////////////////
 
-
+# FORWARD PASS
 layer_1 = Dense_Layer(2, 3)  # Input Layer
 activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(3, 3)
 # PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
-layer_1.forward(X[:25])
+layer_1.forward(X)
 # # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
 activation_relu.forward(layer_1.output)
 # # PERFORMING FORWARD PASS THORUGH SECOUND LAYER
 layer_2.forward(activation_relu.output)  # First 15 input
 # # CREATING SOFTMAX CALSSIFIER COMBINED WITH LOSS AND ACTIVATION
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
-loss = loss_activation.forward(layer_2.output, y[:25])
-print(loss)
+loss = loss_activation.forward(layer_2.output, y)
+print('loss:', loss)
+# print(loss_activation.output)
+predictions = np.argmax(loss_activation.output, axis=1)
+if len(y.shape) == 2:
+    y = np.argmax(y, axis=1)
+accuracy = np.mean(predictions == y)
+print('acc', accuracy)
+
+# BACKWARD PASS
+loss_activation.backward(loss_activation.output, y)
+layer_2.backward(loss_activation.dinputs)
+activation_relu.backward(layer_2.dinputs)
+layer_1.backward(activation_relu.dinput)
+# Print gradients
+print('w1', layer_1.dweights)
+print('b1', layer_1.dbiases)
+print('w2', layer_2.dweights)
+print('b2', layer_2.dbiases)

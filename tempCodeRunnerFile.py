@@ -1,1 +1,1 @@
-print(activation_smax.output)
+layer_2.backward(loss_activation.dinputs)
