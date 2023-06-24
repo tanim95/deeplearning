@@ -230,54 +230,7 @@ class Optimizer_SGD:
         self.iterations += 1
 
 
-# ///////////////////////////////////////////////////////////////////////////////
-
-
-# # FORWARD PASS
-# layer_1 = Dense_Layer(2, 64)  # Input Layer
-# activation_relu = Activation_ReLU()
-# layer_2 = Dense_Layer(64, 3)
-# # PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
-# layer_1.forward(X)
-# # # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
-# activation_relu.forward(layer_1.output)
-# # # PERFORMING FORWARD PASS THORUGH SECOUND LAYER
-# layer_2.forward(activation_relu.output)  # First 15 input
-# # # CREATING SOFTMAX CALSSIFIER COMBINED WITH LOSS AND ACTIVATION
-# loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
-# loss = loss_activation.forward(layer_2.output, y)
-# print('loss:', loss)
-# # print(loss_activation.output)
-# predictions = np.argmax(loss_activation.output, axis=1)
-# if len(y.shape) == 2:
-#     y = np.argmax(y, axis=1)
-# accuracy = np.mean(predictions == y)
-# print('acc', accuracy)
-# # print(loss_activation.output)
-
-
-# # BACKWARD PASS(PROPAGATION)
-# loss_activation.backward(loss_activation.output, y)
-# layer_2.backward(loss_activation.dinputs)
-# activation_relu.backward(layer_2.dinputs)
-# layer_1.backward(activation_relu.dinputs)
-
-# # OPTIMISER
-# optimiser = Optimizer_SGD()
-# optimiser.update_params(layer_1)
-# optimiser.update_params(layer_2)
-
-# # Print gradients
-
-# # print('w1', layer_1.dweights)
-# # print('b1', layer_1.dbiases)
-# # print('w2', layer_2.dweights)
-# # print('b2', layer_2.dbiases)
-
-
 # /////////////////TRAINING IN LOOP ///////////////////////////////////////////////////
-
-
 layer_1 = Dense_Layer(2, 64)  # Input Layer
 activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(64, 3)
