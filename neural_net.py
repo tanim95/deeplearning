@@ -1,9 +1,11 @@
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import seaborn as sns
 import math
+import sys
+
 
 # Layer 1 [3 neurons]
 # INPUTS
@@ -46,14 +48,24 @@ X_demo = np.array([[5.6, 7.8, 9.5, 10.8],
 def spiral_data(points, classes):
     X = np.zeros((points*classes, 2))
     y = np.zeros(points*classes, dtype='uint8')
-    for class_number in range(classes):
-        ix = range(points*class_number, points*(class_number+1))
+    for n in range(classes):
+        ix = range(points*n, points*(n+1))
         r = np.linspace(0.0, 1, points)  # radius
-        t = np.linspace(class_number*4, (class_number+1)*4,
+        t = np.linspace(n*4, (n+1)*4,
                         points) + np.random.randn(points)*0.2
         X[ix] = np.c_[r*np.sin(t*2.5), r*np.cos(t*2.5)]
-        y[ix] = class_number
+        y[ix] = n
     return X, y
+
+
+X, y = spiral_data(100, 3)
+# SHOWING THE DATA
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap='viridis')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.title('Spiral Data')
+plt.colorbar()
+# plt.show()
 
 
 class Dense_Layer:
@@ -219,7 +231,7 @@ class Optimizer_SGD:
 
 
 # ///////////////////////////////////////////////////////////////////////////////
-X, y = spiral_data(100, 3)
+
 
 # # FORWARD PASS
 # layer_1 = Dense_Layer(2, 64)  # Input Layer
@@ -250,20 +262,20 @@ X, y = spiral_data(100, 3)
 # activation_relu.backward(layer_2.dinputs)
 # layer_1.backward(activation_relu.dinputs)
 
-# OPTIMISER
+# # OPTIMISER
 # optimiser = Optimizer_SGD()
 # optimiser.update_params(layer_1)
 # optimiser.update_params(layer_2)
 
-# Print gradients
+# # Print gradients
 
-# print('w1', layer_1.dweights)
-# print('b1', layer_1.dbiases)
-# print('w2', layer_2.dweights)
-# print('b2', layer_2.dbiases)
+# # print('w1', layer_1.dweights)
+# # print('b1', layer_1.dbiases)
+# # print('w2', layer_2.dweights)
+# # print('b2', layer_2.dbiases)
 
 
-# /////////////////TRAIN  IN LOOP ////////////////
+# /////////////////TRAINING IN LOOP ///////////////////////////////////////////////////
 
 
 layer_1 = Dense_Layer(2, 64)  # Input Layer
@@ -272,7 +284,7 @@ layer_2 = Dense_Layer(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
 optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
 
-
+# sys.exit()
 for epoch in range(10001):
 
     layer_1.forward(X)
@@ -305,3 +317,4 @@ for epoch in range(10001):
 
 
 # WE GET [epoch: 10000, acc: 0.940, loss: 0.135, lr: 0.09091735612328393]
+# AND , WE GET, [epoch: 100000, acc: 0.953, loss: 0.106, lr: 0.009901088129585442]
