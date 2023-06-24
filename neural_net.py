@@ -59,19 +59,18 @@ def spiral_data(points, classes):
 class Dense_Layer:
     def __init__(self, n_input, neurons):
         self.weights = np.random.randn(n_input, neurons)
-        self.biases = np.zeros(neurons)
+        self.biases = np.zeros((1, neurons))
 
     def forward(self, input):
         self.inputs = input
         self.output = np.dot(input, self.weights) + self.biases
-        return self.output
 
     def backward(self, dvalues):
         # Gradients on parameters
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         # Gradient on values
-        self.dinputs = np.dot(dvalues, self.dweights.T)
+        self.dinputs = np.dot(dvalues, self.weights.T)
 
 # Activation function-1
 
@@ -84,9 +83,9 @@ class Activation_ReLU:
 
     def backward(self, dvalues):
         # as we need to modify original variable first make a copy
-        self.dinput = dvalues.copy()
+        self.dinputs = dvalues.copy()
         # zero gradient where input values negative
-        self.dinput[self.input <= 0] = 0
+        self.dinputs[self.input <= 0] = 0
 
 
 # Activation function-2
@@ -96,6 +95,7 @@ class Activation_ReLU:
 
 class Activation_SoftMax:
     def forward(self, input):
+        self.inputs = input
         # substracting max value so that e^largeNumber won't cause explode of output!
         exp_val = np.exp(input - np.max(input, axis=1, keepdims=True))
         probability = exp_val / np.sum(exp_val, axis=1, keepdims=True)
@@ -117,13 +117,13 @@ class Activation_SoftMax:
 # Loss Function
 class Loss:
     def calculate(self, output, y):
-        loss = self.forward(y, output)
+        loss = self.forward(output, y)
         mean_loss = np.mean(loss)
         return mean_loss
 
 
 class CategoricalCorssEntropy(Loss):
-    def forward(self, y_true, y_pred):
+    def forward(self, y_pred, y_true):
         samples = len(y_pred)
         y_pred_clip = np.clip(y_pred, math.e ** -7, 1 - math.e ** -7)
         if len(y_true.shape) == 1:  # if the y = [0,1] this shape
@@ -173,60 +173,135 @@ class Activation_Softmax_Loss_CategoricalCrossEntropy():
 # OPTIMISER(Stochastic Gradient Descent)
 
 
+# SGD optimizer
 class Optimizer_SGD:
-
-    def __init__(self, learning_rate=1.0):
+    def __init__(self, learning_rate=1., decay=0., momentum=0.):
         self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay
+        self.iterations = 0
+        self.momentum = momentum
 
-        # UPDATING PARAMETERS
+    # CALLING ONCE BEFORE ANY PARAMTER UPDATE
+    def pre_update_params(self):
+        if self.decay:
+            self.current_learning_rate = self.learning_rate * \
+                (1. / (1. + self.decay * self.iterations))
+
+    # UPDATING PARAMETERS
     def update_params(self, layer):
-        layer.weights += -self.learning_rate * layer.dweights
-        layer.biases += -self.learning_rate * np.squeeze(layer.dbiases)
+        if self.momentum:
+            # If layer does not contain momentum arrays, create them filled with zeros
+            if not hasattr(layer, 'weight_momentums'):
+                layer.weight_momentums = np.zeros_like(layer.weights)
+                layer.bias_momentums = np.zeros_like(layer.biases)
+
+            # Building weight updates with momentum - take previous updates multiplied by retain factor and update with current gradients
+            weight_updates = self.momentum * layer.weight_momentums - \
+                self.current_learning_rate * layer.dweights
+            layer.weight_momentums = weight_updates
+
+            # Building bias updates
+            bias_updates = self.momentum * layer.bias_momentums - \
+                self.current_learning_rate * layer.dbiases
+            layer.bias_momentums = bias_updates
+        else:
+            weight_updates = -self.current_learning_rate * layer.dweights
+            bias_updates = -self.current_learning_rate * layer.dbiases
+
+        # Updating weights and biases using either vanilla or momentum updates
+        layer.weights += weight_updates
+        layer.biases += bias_updates
+
+    # Calling once after any parameter updates
+    def post_update_params(self):
+        self.iterations += 1
 
 
 # ///////////////////////////////////////////////////////////////////////////////
 X, y = spiral_data(100, 3)
 
-# FORWARD PASS
-layer_1 = Dense_Layer(2, 64)  # Input Layer
-activation_relu = Activation_ReLU()
-layer_2 = Dense_Layer(64, 3)
-# PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
-layer_1.forward(X)
-# # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
-activation_relu.forward(layer_1.output)
-# # PERFORMING FORWARD PASS THORUGH SECOUND LAYER
-layer_2.forward(activation_relu.output)  # First 15 input
-# # CREATING SOFTMAX CALSSIFIER COMBINED WITH LOSS AND ACTIVATION
-loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
-loss = loss_activation.forward(layer_2.output, y)
-print('loss:', loss)
-# print(loss_activation.output)
-predictions = np.argmax(loss_activation.output, axis=1)
-if len(y.shape) == 2:
-    y = np.argmax(y, axis=1)
-accuracy = np.mean(predictions == y)
-print('acc', accuracy)
-# print(loss_activation.output)
+# # FORWARD PASS
+# layer_1 = Dense_Layer(2, 64)  # Input Layer
+# activation_relu = Activation_ReLU()
+# layer_2 = Dense_Layer(64, 3)
+# # PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
+# layer_1.forward(X)
+# # # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
+# activation_relu.forward(layer_1.output)
+# # # PERFORMING FORWARD PASS THORUGH SECOUND LAYER
+# layer_2.forward(activation_relu.output)  # First 15 input
+# # # CREATING SOFTMAX CALSSIFIER COMBINED WITH LOSS AND ACTIVATION
+# loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
+# loss = loss_activation.forward(layer_2.output, y)
+# print('loss:', loss)
+# # print(loss_activation.output)
+# predictions = np.argmax(loss_activation.output, axis=1)
+# if len(y.shape) == 2:
+#     y = np.argmax(y, axis=1)
+# accuracy = np.mean(predictions == y)
+# print('acc', accuracy)
+# # print(loss_activation.output)
 
 
-# BACKWARD PASS(PROPAGATION)
-loss_activation.backward(loss_activation.output, y)
-layer_2.backward(loss_activation.dinputs)
-activation_relu.backward(layer_2.dinputs)
-layer_1.backward(activation_relu.dinput)
+# # BACKWARD PASS(PROPAGATION)
+# loss_activation.backward(loss_activation.output, y)
+# layer_2.backward(loss_activation.dinputs)
+# activation_relu.backward(layer_2.dinputs)
+# layer_1.backward(activation_relu.dinputs)
 
 # OPTIMISER
-optimiser = Optimizer_SGD()
-optimiser.update_params(layer_1)
-optimiser.update_params(layer_2)
+# optimiser = Optimizer_SGD()
+# optimiser.update_params(layer_1)
+# optimiser.update_params(layer_2)
 
 # Print gradients
 
-print('w1', layer_1.dweights)
-print('b1', layer_1.dbiases)
-print('w2', layer_2.dweights)
-print('b2', layer_2.dbiases)
+# print('w1', layer_1.dweights)
+# print('b1', layer_1.dbiases)
+# print('w2', layer_2.dweights)
+# print('b2', layer_2.dbiases)
 
 
-# /////////////////FOR TESTING ////////////////
+# /////////////////TRAIN  IN LOOP ////////////////
+
+
+layer_1 = Dense_Layer(2, 64)  # Input Layer
+activation_relu = Activation_ReLU()
+layer_2 = Dense_Layer(64, 3)
+loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
+optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
+
+
+for epoch in range(10001):
+
+    layer_1.forward(X)
+    activation_relu.forward(layer_1.output)
+    layer_2.forward(activation_relu.output)
+    loss = loss_activation.forward(layer_2.output, y)
+
+    predictions = np.argmax(loss_activation.output, axis=1)
+    # if len(y.shape) == 2:
+    #     y = np.argmax(y, axis=1)
+    accuracy = np.mean(predictions == y)
+
+    if not epoch % 100:
+        print(f'epoch: {epoch}, ' +
+              f'acc: {accuracy:.3f}, ' +
+              f'loss: {loss:.3f}, ' +
+              f'lr: {optimiser.current_learning_rate}')
+
+    # Backward pass
+    loss_activation.backward(loss_activation.output, y)
+    layer_2.backward(loss_activation.dinputs)
+    activation_relu.backward(layer_2.dinputs)
+    layer_1.backward(activation_relu.dinputs)
+
+    # Update weights and biases
+    optimiser.pre_update_params()
+    optimiser.update_params(layer_1)
+    optimiser.update_params(layer_2)
+    optimiser.post_update_params()
+
+
+# WE GET [epoch: 10000, acc: 0.940, loss: 0.135, lr: 0.09091735612328393]
