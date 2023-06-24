@@ -59,11 +59,11 @@ def spiral_data(points, classes):
 class Dense_Layer:
     def __init__(self, n_input, neurons):
         self.weights = np.random.randn(n_input, neurons)
-        self.bias = np.zeros(neurons)
+        self.biases = np.zeros(neurons)
 
     def forward(self, input):
         self.inputs = input
-        self.output = np.dot(input, self.weights) + self.bias
+        self.output = np.dot(input, self.weights) + self.biases
         return self.output
 
     def backward(self, dvalues):
@@ -170,37 +170,27 @@ class Activation_Softmax_Loss_CategoricalCrossEntropy():
         # NORMALISE GRADIENT
         self.dinputs = self.dinputs / samples
 
+# OPTIMISER(Stochastic Gradient Descent)
 
+
+class Optimizer_SGD:
+
+    def __init__(self, learning_rate=1.0):
+        self.learning_rate = learning_rate
+
+        # UPDATING PARAMETERS
+    def update_params(self, layer):
+        layer.weights += -self.learning_rate * layer.dweights
+        layer.biases += -self.learning_rate * np.squeeze(layer.dbiases)
+
+
+# ///////////////////////////////////////////////////////////////////////////////
 X, y = spiral_data(100, 3)
 
-# ////////////////////////////////////////////////// test 1 //////////////////////////////
-
-# layer_1 = Dense_Layer(2, 3)
-# activation_relu = Activation_ReLU()
-# layer_2 = Dense_Layer(3, 3)
-# activation_smax = Activation_SoftMax()
-# output_1 = layer_1.forward(X)
-# output_2 = layer_2.forward(output_1)
-
-# activation_relu.forward(output_1)
-# activation_smax.forward(output_2)
-# # print(activation_smax.output)
-
-# loss_function = CategoricalCorssEntropy()
-# loss = loss_function.calculate(y, activation_smax.output)
-# # print(loss)
-
-# # calculating Accuracy
-# prediction = np.argmax(activation_smax.output, axis=1)
-# accuracy = np.mean(prediction == y)
-# # print(accuracy)
-
-# ////////////////////////////////////////////////// test 2 /////////////////////////////
-
 # FORWARD PASS
-layer_1 = Dense_Layer(2, 3)  # Input Layer
+layer_1 = Dense_Layer(2, 64)  # Input Layer
 activation_relu = Activation_ReLU()
-layer_2 = Dense_Layer(3, 3)
+layer_2 = Dense_Layer(64, 3)
 # PERFOMING FORWARD PASS OF OUT TRAINING DATA THROUGH FIRST LAYER
 layer_1.forward(X)
 # # PERFORMING FORWARD PASS THORUGH ACTIVATON FUNCTION
@@ -217,14 +207,26 @@ if len(y.shape) == 2:
     y = np.argmax(y, axis=1)
 accuracy = np.mean(predictions == y)
 print('acc', accuracy)
+# print(loss_activation.output)
 
-# BACKWARD PASS
+
+# BACKWARD PASS(PROPAGATION)
 loss_activation.backward(loss_activation.output, y)
 layer_2.backward(loss_activation.dinputs)
 activation_relu.backward(layer_2.dinputs)
 layer_1.backward(activation_relu.dinput)
+
+# OPTIMISER
+optimiser = Optimizer_SGD()
+optimiser.update_params(layer_1)
+optimiser.update_params(layer_2)
+
 # Print gradients
+
 print('w1', layer_1.dweights)
 print('b1', layer_1.dbiases)
 print('w2', layer_2.dweights)
 print('b2', layer_2.dbiases)
+
+
+# /////////////////FOR TESTING ////////////////
