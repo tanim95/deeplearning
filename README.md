@@ -1,6 +1,6 @@
 # Neural Network
 
-This repository contains an implementation of a simple neural network using Python and NumPy. The neural network is designed to perform classification tasks on spiral data.
+This repository contains an implementation of a simple neural network using Python and NumPy.
 
 ## Overview
 
@@ -52,7 +52,7 @@ layer_1 = Dense_Layer(2, 64)
 activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
-optimizer = Optimizer_SGD(decay=1e-3, momentum=0.9)
+optimizer = Optimizer_SGD(decay=1e-3, momentum=0.7)
 
 # Training loop
 for epoch in range(num_epochs):
