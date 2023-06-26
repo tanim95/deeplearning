@@ -58,7 +58,7 @@ def spiral_data(points, classes):
     return X, y
 
 
-X, y = spiral_data(100, 3)
+X, y = spiral_data(300, 3)
 # SHOWING THE DATA
 plt.scatter(X[:, 0], X[:, 1], c=y, cmap='viridis')
 plt.xlabel('X1')
@@ -228,8 +228,9 @@ class Optimizer_SGD:
     # Calling once after any parameter updates
     def post_update_params(self):
         self.iterations += 1
-# ADAM (Adaptive Momentum) OPTIMIZER
 
+
+# ADAM (Adaptive Momentum) OPTIMIZER
 
 class Optimizer_Adam:
     def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta_1=0.9, beta_2=0.999):
@@ -288,7 +289,7 @@ activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
 # optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
-optimiser = Optimizer_Adam(learning_rate=0.03, decay=1e-5)
+optimiser = Optimizer_Adam(learning_rate=0.01, decay=1e-5, beta_1=0.98)
 
 # sys.exit()
 for epoch in range(10001):
