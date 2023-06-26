@@ -228,6 +228,58 @@ class Optimizer_SGD:
     # Calling once after any parameter updates
     def post_update_params(self):
         self.iterations += 1
+# ADAM (Adaptive Momentum) OPTIMIZER
+
+
+class Optimizer_Adam:
+    def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7, beta_1=0.9, beta_2=0.999):
+        self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay
+        self.iterations = 0
+        self.epsilon = epsilon
+        self.beta_1 = beta_1
+        self.beta_2 = beta_2
+
+    def pre_update_params(self):
+        if self.decay:
+            self.current_learning_rate = self.learning_rate * \
+                (1. / (1. + self.decay * self.iterations))
+
+    def update_params(self, layer):
+        if not hasattr(layer, 'weight_cache'):
+            layer.weight_momentums = np.zeros_like(layer.weights)
+            layer.weight_cache = np.zeros_like(layer.weights)
+            layer.bias_momentums = np.zeros_like(layer.biases)
+            layer.bias_cache = np.zeros_like(layer.biases)
+
+        layer.weight_momentums = self.beta_1 * \
+            layer.weight_momentums + (1 - self.beta_1) * layer.dweights
+        layer.bias_momentums = self.beta_1 * \
+            layer.bias_momentums + (1 - self.beta_1) * layer.dbiases
+
+        weight_momentums_corrected = layer.weight_momentums / \
+            (1 - self.beta_1 ** (self.iterations + 1))
+        bias_momentums_corrected = layer.bias_momentums / \
+            (1 - self.beta_1 ** (self.iterations + 1))
+
+        layer.weight_cache = self.beta_2 * layer.weight_cache + \
+            (1 - self.beta_2) * layer.dweights**2
+        layer.bias_cache = self.beta_2 * layer.bias_cache + \
+            (1 - self.beta_2) * layer.dbiases**2
+
+        weight_cache_corrected = layer.weight_cache / \
+            (1 - self.beta_2 ** (self.iterations + 1))
+        bias_cache_corrected = layer.bias_cache / \
+            (1 - self.beta_2 ** (self.iterations + 1))
+
+        layer.weights += -self.current_learning_rate * weight_momentums_corrected / \
+            (np.sqrt(weight_cache_corrected) + self.epsilon)
+        layer.biases += -self.current_learning_rate * bias_momentums_corrected / \
+            (np.sqrt(bias_cache_corrected) + self.epsilon)
+
+    def post_update_params(self):
+        self.iterations += 1
 
 
 # /////////////////TRAINING IN LOOP ///////////////////////////////////////////////////
@@ -235,7 +287,8 @@ layer_1 = Dense_Layer(2, 64)  # Input Layer
 activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
-optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
+# optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
+optimiser = Optimizer_Adam(learning_rate=0.03, decay=1e-5)
 
 # sys.exit()
 for epoch in range(10001):
@@ -271,3 +324,4 @@ for epoch in range(10001):
 
 # WE GET [epoch: 10000, acc: 0.940, loss: 0.135, lr: 0.09091735612328393]
 # AND , WE GET, [epoch: 100000, acc: 0.953, loss: 0.106, lr: 0.009901088129585442]
+# with ADAM optimser we get [epoch: 10000, acc: 0.990, loss: 0.037, lr: 0.027272975208865534]
