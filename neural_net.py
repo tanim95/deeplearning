@@ -289,7 +289,7 @@ activation_relu = Activation_ReLU()
 layer_2 = Dense_Layer(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossEntropy()
 # optimiser = Optimizer_SGD(decay=1e-3, momentum=0.7)
-optimiser = Optimizer_Adam(learning_rate=0.01, decay=1e-5, beta_1=0.98)
+optimiser = Optimizer_Adam(learning_rate=0.05, decay=1e-7)
 
 # sys.exit()
 for epoch in range(10001):
@@ -323,6 +323,5 @@ for epoch in range(10001):
     optimiser.post_update_params()
 
 
-# WE GET [epoch: 10000, acc: 0.940, loss: 0.135, lr: 0.09091735612328393]
-# AND , WE GET, [epoch: 100000, acc: 0.953, loss: 0.106, lr: 0.009901088129585442]
-# with ADAM optimser we get [epoch: 10000, acc: 0.990, loss: 0.037, lr: 0.027272975208865534]
+# WE GET [epoch: 10000, acc: 0.922, loss: 0.195, lr: 0.09091735612328393] with SGD
+# with ADAM optimser we get [epoch: 10000, acc: 0.953, loss: 0.120, lr: 0.04995005494006543]
