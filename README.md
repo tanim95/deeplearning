@@ -2,6 +2,10 @@
 
 This repository contains an implementation of a simple neural network using Python and NumPy.
 
+# Books
+
+"Neural Network from Scratch in Python" -by Harrison Kinsley & Daniel Kukieła
+
 ## Overview
 
 The neural network consists of the following components:
